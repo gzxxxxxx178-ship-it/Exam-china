@@ -90,13 +90,22 @@ async function loadPositions() {
 }
 
 async function loadOptions() {
-  const response = await fetch("/api/location-options");
+  const params = new URLSearchParams();
+  const category = $("#category").value;
+  if (category) params.append("categories", category);
+  const response = await fetch(`/api/location-options?${params}`);
   if (!response.ok) throw new Error("地区选项加载失败");
   state.options = await response.json();
   const province = $("#province");
+  const selectedProvince = province.value;
+  province.replaceChildren(option("", "全国"));
   for (const item of state.options) {
     province.append(option(item.name, `${item.name}（${item.position_count.toLocaleString()}）`));
   }
+  province.value = state.options.some((item) => item.name === selectedProvince)
+    ? selectedProvince
+    : "";
+  setCities();
 }
 
 async function loadSources() {
@@ -121,6 +130,13 @@ async function loadSources() {
 }
 
 $("#province").addEventListener("change", () => { setCities(); state.page = 1; });
+$("#category").addEventListener("change", () => {
+  state.page = 1;
+  loadOptions().catch((reason) => {
+    $("#error").textContent = reason.message;
+    $("#error").hidden = false;
+  });
+});
 $("#search-button").addEventListener("click", () => { state.page = 1; loadPositions(); });
 $("#keyword").addEventListener("keydown", (event) => {
   if (event.key === "Enter") { state.page = 1; loadPositions(); }

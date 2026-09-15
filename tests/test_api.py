@@ -205,3 +205,48 @@ def test_location_options_merge_same_named_city_with_different_codes(
     assert response.json()[0]["cities"] == [
         {"name": "泰安市", "code": "370900", "position_count": 2}
     ]
+
+
+def test_location_options_can_filter_by_recruitment_category(
+    client: TestClient, session_factory: sessionmaker[Session]
+) -> None:
+    with session_factory() as session:
+        seed_positions(session)
+        original_batch = session.query(RecruitmentBatch).one()
+        grid_batch = RecruitmentBatch(
+            source_batch_id="state-grid-2027",
+            organization=original_batch.organization,
+            source_id=original_batch.source_id,
+            title="国家电网招聘",
+            recruitment_type=RecruitmentType.SOE_STATE_GRID,
+            year=2027,
+            status=RecruitmentStatus.OPEN,
+            source_url="https://example.gov.cn/grid/1",
+            first_seen_at=original_batch.first_seen_at,
+            last_seen_at=original_batch.last_seen_at,
+            content_hash="b" * 64,
+        )
+        position = Position(title="电网岗位")
+        position.locations.append(
+            PositionLocation(
+                province_code="370000",
+                city_code="371600",
+                province_name="山东省",
+                city_name="滨州市",
+                location_type=LocationType.WORK_LOCATION,
+                precision=LocationPrecision.CITY,
+                raw_text="山东省滨州市",
+                confidence=1.0,
+            )
+        )
+        grid_batch.positions.append(position)
+        session.add(grid_batch)
+        session.commit()
+
+    response = client.get(
+        "/api/location-options", params={"categories": "SOE_STATE_GRID"}
+    )
+    assert response.status_code == 200
+    assert response.json()[0]["cities"] == [
+        {"name": "滨州市", "code": "371600", "position_count": 1}
+    ]

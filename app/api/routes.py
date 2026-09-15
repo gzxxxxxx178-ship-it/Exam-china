@@ -8,6 +8,7 @@ from app.db.models import (
     AdministrativeDivision,
     CrawlRun,
     ExamEvent,
+    Position,
     PositionLocation,
     RecruitmentBatch,
     SourceRegistry,
@@ -59,8 +60,9 @@ def divisions(
 @router.get("/api/location-options", response_model=list[ProvinceOptionOut])
 def location_options(
     session: Annotated[Session, Depends(get_db)],
+    categories: Annotated[list[RecruitmentType] | None, Query()] = None,
 ) -> list[ProvinceOptionOut]:
-    rows = session.execute(
+    query = (
         select(
             PositionLocation.province_name,
             PositionLocation.province_code,
@@ -68,6 +70,9 @@ def location_options(
             PositionLocation.city_code,
             func.count(PositionLocation.position_id),
         )
+        .select_from(PositionLocation)
+        .join(Position)
+        .join(RecruitmentBatch)
         .where(
             PositionLocation.location_type == LocationType.WORK_LOCATION,
             PositionLocation.province_name.is_not(None),
@@ -79,7 +84,10 @@ def location_options(
             PositionLocation.city_code,
         )
         .order_by(PositionLocation.province_code, PositionLocation.city_name)
-    ).all()
+    )
+    if categories:
+        query = query.where(RecruitmentBatch.recruitment_type.in_(categories))
+    rows = session.execute(query).all()
     grouped: dict[tuple[str, str | None], dict[str, object]] = {}
     for province_name, province_code, city_name, city_code, count in rows:
         key = (province_name, province_code)
