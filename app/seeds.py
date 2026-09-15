@@ -44,7 +44,23 @@ def load_sources(session: Session, path: Path) -> int:
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     created = 0
     for item in payload.get("sources", []):
-        if session.scalar(select(SourceRegistry).where(SourceRegistry.key == item["key"])):
+        existing = session.scalar(
+            select(SourceRegistry).where(SourceRegistry.key == item["key"])
+        )
+        if existing:
+            for field in (
+                "name",
+                "category",
+                "base_url",
+                "authority_level",
+                "province_code",
+                "city_code",
+                "adapter_key",
+                "crawl_policy",
+                "interval_minutes",
+                "enabled",
+            ):
+                setattr(existing, field, item[field])
             continue
         session.add(
             SourceRegistry(

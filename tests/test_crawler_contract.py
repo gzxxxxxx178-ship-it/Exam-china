@@ -14,6 +14,7 @@ from app.domain.enums import (
 def test_parsed_recruitment_contract_accepts_valid_position() -> None:
     parsed = ParsedRecruitment(
         source_item_id="notice-1",
+        source_batch_id="batch-2027",
         title="2027 年公开招聘",
         organization_name="某事业单位",
         organization_type="PUBLIC_INSTITUTION",
@@ -49,4 +50,3 @@ def test_parsed_location_rejects_nonstandard_division_code() -> None:
             precision=LocationPrecision.CITY,
             confidence=0.8,
         )
-

@@ -5,7 +5,6 @@ from datetime import date, datetime
 from sqlalchemy import (
     Boolean,
     Date,
-    DateTime,
     Enum,
     ForeignKey,
     Index,
@@ -17,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, TimestampMixin
+from app.db.base import Base, TimestampMixin, UTCDateTime
 from app.domain.enums import (
     CrawlStatus,
     LocationPrecision,
@@ -74,7 +73,7 @@ class SourceRegistry(Base, TimestampMixin):
     interval_minutes: Mapped[int] = mapped_column(Integer, default=240, nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     last_success_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        UTCDateTime(), nullable=True
     )
     health_status: Mapped[SourceHealth] = mapped_column(
         enum_column(SourceHealth, "source_health"),
@@ -88,8 +87,8 @@ class CrawlRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     source_id: Mapped[int] = mapped_column(ForeignKey("source_registry.id"), index=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     status: Mapped[CrawlStatus] = mapped_column(
         enum_column(CrawlStatus, "crawl_status"), nullable=False
     )
@@ -118,6 +117,7 @@ class RecruitmentBatch(Base, TimestampMixin):
     __tablename__ = "recruitment_batch"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    source_batch_id: Mapped[str] = mapped_column(String(180), nullable=False)
     organization_id: Mapped[int] = mapped_column(ForeignKey("organization.id"), index=True)
     source_id: Mapped[int] = mapped_column(ForeignKey("source_registry.id"), index=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -127,20 +127,24 @@ class RecruitmentBatch(Base, TimestampMixin):
     audience_type: Mapped[str | None] = mapped_column(String(80))
     year: Mapped[int | None] = mapped_column(Integer, index=True)
     batch_no: Mapped[str | None] = mapped_column(String(80))
-    publish_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
-    application_start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    application_end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    publish_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), index=True)
+    application_start_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    application_end_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), index=True)
     status: Mapped[RecruitmentStatus] = mapped_column(
         enum_column(RecruitmentStatus, "recruitment_status"), index=True, nullable=False
     )
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    first_seen_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
 
     organization: Mapped[Organization] = relationship()
     positions: Mapped[list[Position]] = relationship(
         back_populates="batch", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("source_id", "source_batch_id", name="uq_batch_source_external_id"),
     )
 
 
@@ -208,14 +212,19 @@ class ExamEvent(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     batch_id: Mapped[int] = mapped_column(ForeignKey("recruitment_batch.id"), index=True)
+    source_event_id: Mapped[str] = mapped_column(String(180), nullable=False)
     event_type: Mapped[str] = mapped_column(String(80), index=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
-    start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
-    end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    start_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), index=True)
+    end_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     province_code: Mapped[str | None] = mapped_column(String(6), index=True)
     city_code: Mapped[str | None] = mapped_column(String(6), index=True)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="SCHEDULED")
+
+    __table_args__ = (
+        UniqueConstraint("batch_id", "source_event_id", name="uq_event_batch_source_id"),
+    )
 
 
 class RawDocument(Base):
@@ -225,13 +234,19 @@ class RawDocument(Base):
     source_id: Mapped[int] = mapped_column(ForeignKey("source_registry.id"), index=True)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
     canonical_url: Mapped[str] = mapped_column(Text, nullable=False)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     http_status: Mapped[int] = mapped_column(Integer, nullable=False)
     content_type: Mapped[str | None] = mapped_column(String(160))
     content_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     storage_path: Mapped[str] = mapped_column(Text, nullable=False)
     parser_version: Mapped[str | None] = mapped_column(String(80))
     parse_status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source_id", "canonical_url", "content_hash", name="uq_raw_source_url_hash"
+        ),
+    )
 
 
 class Revision(Base):
@@ -243,7 +258,7 @@ class Revision(Base):
     revision_no: Mapped[int] = mapped_column(Integer, nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     changed_fields: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    detected_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
 
     __table_args__ = (
         UniqueConstraint("batch_id", "revision_no", name="uq_revision_batch_number"),

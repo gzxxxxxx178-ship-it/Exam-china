@@ -36,6 +36,7 @@ def seed_positions(session: Session) -> None:
     )
     now = datetime.now(UTC)
     batch = RecruitmentBatch(
+        source_batch_id="test-2027",
         organization=organization,
         source_id=1,
         title="2027 年公开招聘",

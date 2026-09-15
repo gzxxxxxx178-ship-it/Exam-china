@@ -8,12 +8,14 @@ sources:
     city_code: null
     adapter_key: national_exam
     crawl_policy:
-      robots_checked_at: null
+      robots_checked_at: "2026-09-15"
+      robots_status: NOT_PROVIDED
+      access_note: 仅访问专题页自身使用的公开公告 JSON 接口；不自动访问带验证码的附件下载。
       terms_checked_at: null
       max_concurrency: 1
       min_interval_seconds: 5
     interval_minutes: 240
-    enabled: false
+    enabled: true
 
   - key: mohrss_institution
     name: 中央和国家机关事业单位公开招聘服务平台
@@ -24,7 +26,9 @@ sources:
     city_code: null
     adapter_key: mohrss_institution
     crawl_policy:
-      robots_checked_at: null
+      robots_checked_at: "2026-09-15"
+      robots_status: NOT_PROVIDED
+      access_note: 主站返回浏览器校验脚本，暂停自动详情抓取，不绕过技术措施。
       terms_checked_at: null
       max_concurrency: 1
       min_interval_seconds: 5
@@ -46,4 +50,3 @@ sources:
       min_interval_seconds: 8
     interval_minutes: 240
     enabled: false
-

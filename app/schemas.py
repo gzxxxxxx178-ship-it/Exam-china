@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from app.domain.enums import (
+    CrawlStatus,
     LocationPrecision,
     LocationType,
     RecruitmentStatus,
@@ -56,6 +57,38 @@ class PositionPage(BaseModel):
     page_size: int
 
 
+class EventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    source_event_id: str
+    event_type: str
+    title: str
+    start_at: datetime | None
+    end_at: datetime | None
+    source_url: str
+    status: str
+
+
+class BatchSummaryOut(BaseModel):
+    id: int
+    title: str
+    year: int | None
+    recruitment_type: RecruitmentType
+    status: RecruitmentStatus
+    organization_name: str
+    publish_at: datetime | None
+    application_start_at: datetime | None
+    application_end_at: datetime | None
+    source_url: str
+    event_count: int
+
+
+class BatchDetailOut(BatchSummaryOut):
+    events: list[EventOut]
+    position_count: int
+
+
 class SourceCoverageOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -69,3 +102,18 @@ class SourceCoverageOut(BaseModel):
     last_success_at: datetime | None
     health_status: SourceHealth
 
+
+class CrawlRunOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    source_id: int
+    started_at: datetime
+    finished_at: datetime | None
+    status: CrawlStatus
+    fetched_count: int
+    parsed_count: int
+    new_count: int
+    changed_count: int
+    error_type: str | None
+    error_message: str | None

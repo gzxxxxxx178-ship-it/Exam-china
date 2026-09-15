@@ -58,6 +58,7 @@ class ParsedPosition(BaseModel):
 
 
 class ParsedEvent(BaseModel):
+    source_event_id: str
     event_type: str
     title: str
     start_at: datetime | None = None
@@ -69,6 +70,7 @@ class ParsedEvent(BaseModel):
 
 class ParsedRecruitment(BaseModel):
     source_item_id: str
+    source_batch_id: str
     title: str = Field(min_length=1)
     organization_name: str = Field(min_length=1)
     organization_type: str
@@ -94,4 +96,3 @@ class SourceAdapter(Protocol):
     async def fetch(self, item: DiscoveredItem) -> RawPayload: ...
 
     async def parse(self, payload: RawPayload) -> ParsedRecruitment: ...
-
