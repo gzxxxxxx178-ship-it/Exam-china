@@ -28,6 +28,8 @@ class LocationOut(BaseModel):
     raw_text: str
     province_code: str | None
     city_code: str | None
+    province_name: str | None
+    city_name: str | None
     location_type: LocationType
     precision: LocationPrecision
     confidence: float
@@ -37,10 +39,15 @@ class PositionOut(BaseModel):
     id: int
     title: str
     position_code: str | None
+    employer_name: str | None
     department: str | None
     headcount: int | None
     education: str | None
+    degree: str | None
     majors_raw: str | None
+    political_status: str | None
+    work_experience: str | None
+    other_requirements: str | None
     organization_name: str
     batch_title: str
     recruitment_type: RecruitmentType
@@ -55,6 +62,19 @@ class PositionPage(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class CityOptionOut(BaseModel):
+    name: str
+    code: str | None
+    position_count: int
+
+
+class ProvinceOptionOut(BaseModel):
+    name: str
+    code: str | None
+    position_count: int
+    cities: list[CityOptionOut]
 
 
 class EventOut(BaseModel):

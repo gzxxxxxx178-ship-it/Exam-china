@@ -13,16 +13,27 @@ from app.domain.enums import (
 def _area_predicate(
     province_code: str | None,
     city_code: str | None,
+    province_name: str | None,
+    city_name: str | None,
     include_broader_scope: bool,
 ):
     location_match = PositionLocation.location_type == LocationType.WORK_LOCATION
-    if city_code:
-        exact = PositionLocation.city_code == city_code
+    if city_code or city_name:
+        exact = (
+            PositionLocation.city_code == city_code
+            if city_code
+            else PositionLocation.city_name == city_name
+        )
         conditions = [exact]
         if include_broader_scope:
+            province_match = (
+                PositionLocation.province_code == province_code
+                if province_code
+                else PositionLocation.province_name == province_name
+            )
             conditions.extend(
                 [
-                    (PositionLocation.province_code == province_code)
+                    province_match
                     & (PositionLocation.precision == LocationPrecision.PROVINCE),
                     PositionLocation.precision.in_(
                         [LocationPrecision.NATIONWIDE, LocationPrecision.UNKNOWN]
@@ -30,8 +41,12 @@ def _area_predicate(
                 ]
             )
         location_match &= or_(*conditions)
-    elif province_code:
-        conditions = [PositionLocation.province_code == province_code]
+    elif province_code or province_name:
+        conditions = [
+            PositionLocation.province_code == province_code
+            if province_code
+            else PositionLocation.province_name == province_name
+        ]
         if include_broader_scope:
             conditions.append(
                 PositionLocation.precision.in_(
@@ -52,6 +67,8 @@ def build_position_query(
     *,
     province_code: str | None = None,
     city_code: str | None = None,
+    province_name: str | None = None,
+    city_name: str | None = None,
     categories: list[RecruitmentType] | None = None,
     statuses: list[RecruitmentStatus] | None = None,
     keyword: str | None = None,
@@ -66,7 +83,9 @@ def build_position_query(
             selectinload(Position.batch).selectinload(RecruitmentBatch.organization),
         )
     )
-    area = _area_predicate(province_code, city_code, include_broader_scope)
+    area = _area_predicate(
+        province_code, city_code, province_name, city_name, include_broader_scope
+    )
     if area is not None:
         query = query.where(area)
     if categories:
@@ -78,6 +97,7 @@ def build_position_query(
         query = query.where(
             or_(
                 Position.title.ilike(pattern),
+                Position.employer_name.ilike(pattern),
                 Position.department.ilike(pattern),
                 Position.majors_raw.ilike(pattern),
                 Organization.canonical_name.ilike(pattern),
@@ -101,4 +121,3 @@ def list_positions(
         session.scalars(query.offset((page - 1) * page_size).limit(page_size)).unique()
     )
     return items, total
-

@@ -8,19 +8,22 @@ from app.db.models import (
     AdministrativeDivision,
     CrawlRun,
     ExamEvent,
+    PositionLocation,
     RecruitmentBatch,
     SourceRegistry,
 )
 from app.db.session import get_db
-from app.domain.enums import RecruitmentStatus, RecruitmentType
+from app.domain.enums import LocationType, RecruitmentStatus, RecruitmentType
 from app.schemas import (
     BatchDetailOut,
     BatchSummaryOut,
+    CityOptionOut,
     CrawlRunOut,
     DivisionOut,
     LocationOut,
     PositionOut,
     PositionPage,
+    ProvinceOptionOut,
     SourceCoverageOut,
 )
 from app.services.positions import list_positions
@@ -53,11 +56,57 @@ def divisions(
     return list(session.scalars(query.order_by(AdministrativeDivision.code)))
 
 
+@router.get("/api/location-options", response_model=list[ProvinceOptionOut])
+def location_options(
+    session: Annotated[Session, Depends(get_db)],
+) -> list[ProvinceOptionOut]:
+    rows = session.execute(
+        select(
+            PositionLocation.province_name,
+            PositionLocation.province_code,
+            PositionLocation.city_name,
+            PositionLocation.city_code,
+            func.count(PositionLocation.position_id),
+        )
+        .where(
+            PositionLocation.location_type == LocationType.WORK_LOCATION,
+            PositionLocation.province_name.is_not(None),
+        )
+        .group_by(
+            PositionLocation.province_name,
+            PositionLocation.province_code,
+            PositionLocation.city_name,
+            PositionLocation.city_code,
+        )
+        .order_by(PositionLocation.province_code, PositionLocation.city_name)
+    ).all()
+    grouped: dict[tuple[str, str | None], dict[str, object]] = {}
+    for province_name, province_code, city_name, city_code, count in rows:
+        key = (province_name, province_code)
+        item = grouped.setdefault(
+            key,
+            {
+                "name": province_name,
+                "code": province_code,
+                "position_count": 0,
+                "cities": [],
+            },
+        )
+        item["position_count"] += count
+        if city_name:
+            item["cities"].append(
+                CityOptionOut(name=city_name, code=city_code, position_count=count)
+            )
+    return [ProvinceOptionOut(**item) for item in grouped.values()]
+
+
 @router.get("/api/positions", response_model=PositionPage)
 def positions(
     session: Annotated[Session, Depends(get_db)],
     province_code: str | None = None,
     city_code: str | None = None,
+    province_name: str | None = None,
+    city_name: str | None = None,
     categories: Annotated[list[RecruitmentType] | None, Query()] = None,
     statuses: Annotated[list[RecruitmentStatus] | None, Query()] = None,
     keyword: str | None = None,
@@ -69,6 +118,8 @@ def positions(
         session,
         province_code=province_code,
         city_code=city_code,
+        province_name=province_name,
+        city_name=city_name,
         categories=categories,
         statuses=statuses,
         keyword=keyword,
@@ -82,10 +133,15 @@ def positions(
                 id=item.id,
                 title=item.title,
                 position_code=item.position_code,
+                employer_name=item.employer_name,
                 department=item.department,
                 headcount=item.headcount,
                 education=item.education,
+                degree=item.degree,
                 majors_raw=item.majors_raw,
+                political_status=item.political_status,
+                work_experience=item.work_experience,
+                other_requirements=item.other_requirements,
                 organization_name=item.batch.organization.canonical_name,
                 batch_title=item.batch.title,
                 recruitment_type=item.batch.recruitment_type,

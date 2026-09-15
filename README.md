@@ -1,6 +1,6 @@
 # Exam Finding
 
-个人使用的公职、事业单位和国企招聘信息聚合系统。当前完成 M0：统一数据模型、行政区划筛选、来源注册、数据库初始化和查询 API。
+个人使用的公职、事业单位和国企招聘信息聚合系统。当前已完成国家公务员局公告采集、2026 国考官方 XLS 导入、省市筛选 API 和本地岗位查询页面。
 
 ## 启动
 
@@ -10,12 +10,13 @@ uv run python -m app.cli init-db
 uv run uvicorn app.main:app --reload
 ```
 
-打开 <http://127.0.0.1:8000/docs> 查看接口。
+打开 <http://127.0.0.1:8000> 使用岗位查询页面；<http://127.0.0.1:8000/docs> 是接口文档。
 
 ## 当前接口
 
 - `GET /health`：服务和数据库状态；
 - `GET /api/divisions`：行政区划级联数据；
+- `GET /api/location-options`：按已导入岗位生成省市筛选项；
 - `GET /api/positions`：按省、市、类别、状态和关键词筛选岗位；
 - `GET /api/batches`：招聘批次列表；
 - `GET /api/batches/{id}`：批次详情和考试时间线；
@@ -43,7 +44,19 @@ uv run python -m app.cli run-source national_civil_service --max-items 3 --dry-r
 uv run python -m app.cli run-source national_civil_service --max-items 20
 ```
 
-国家公务员局职位附件的网页下载流程带图形验证码，系统不会绕过该限制。现阶段自动采集公开公告正文和考试时间线；职位表通过后续的本地 XLSX 导入功能接入。
+国家公务员局职位附件的网页下载流程带图形验证码，系统不会绕过该限制。请人工从官方网站下载 `.xls` 文件，然后先只读试跑：
+
+```bash
+uv run python -m app.cli import-national-exam "/绝对路径/招考简章.xls" --dry-run
+```
+
+核对记录数、招录人数和未识别地点后，再正式导入：
+
+```bash
+uv run python -m app.cli import-national-exam "/绝对路径/招考简章.xls"
+```
+
+导入器以“部门代码 + 职位代码”作为来源唯一键，重复执行不会重复写入。源文件会按 SHA-256 留存到本地原始数据目录，原始下载文件不会被修改。
 
 ## 测试
 

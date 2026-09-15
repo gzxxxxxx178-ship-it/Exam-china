@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>岗位雷达</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">个人招聘信息工作台</p>
+        <h1>岗位雷达</h1>
+      </div>
+      <a class="api-link" href="/docs">接口文档</a>
+    </header>
+
+    <main>
+      <section class="summary" aria-label="数据概览">
+        <div>
+          <span>当前岗位</span>
+          <strong id="total-count">—</strong>
+        </div>
+        <div>
+          <span>数据范围</span>
+          <strong>2026 国考</strong>
+        </div>
+        <div>
+          <span>来源</span>
+          <strong>国家公务员局</strong>
+        </div>
+      </section>
+
+      <section class="filter-panel" aria-label="岗位筛选">
+        <label class="search-field">
+          <span>关键词</span>
+          <input id="keyword" type="search" placeholder="职位、单位或专业" autocomplete="off" />
+        </label>
+        <label>
+          <span>省份</span>
+          <select id="province"><option value="">全国</option></select>
+        </label>
+        <label>
+          <span>城市</span>
+          <select id="city" disabled><option value="">全部城市</option></select>
+        </label>
+        <label>
+          <span>每页</span>
+          <select id="page-size">
+            <option value="20">20 条</option>
+            <option value="50">50 条</option>
+            <option value="100">100 条</option>
+          </select>
+        </label>
+        <button id="search-button" type="button">查询岗位</button>
+      </section>
+
+      <section class="result-heading">
+        <div>
+          <p id="result-label">全国岗位</p>
+          <small id="result-status">正在读取数据…</small>
+        </div>
+        <label class="broader-scope">
+          <input id="broader-scope" type="checkbox" />
+          <span>包含省级统筹岗位</span>
+        </label>
+      </section>
+
+      <div id="error" class="error" hidden></div>
+      <section id="position-list" class="position-list" aria-live="polite"></section>
+
+      <nav class="pagination" aria-label="分页">
+        <button id="previous" type="button">上一页</button>
+        <span id="page-label">第 1 页</span>
+        <button id="next" type="button">下一页</button>
+      </nav>
+    </main>
+
+    <template id="position-template">
+      <article class="position-card">
+        <div class="card-main">
+          <div class="card-title-row">
+            <div>
+              <p class="employer"></p>
+              <h2 class="title"></h2>
+            </div>
+            <span class="headcount"></span>
+          </div>
+          <dl class="facts">
+            <div><dt>工作地点</dt><dd class="location"></dd></div>
+            <div><dt>学历</dt><dd class="education"></dd></div>
+            <div><dt>专业</dt><dd class="major"></dd></div>
+            <div><dt>政治面貌</dt><dd class="political"></dd></div>
+          </dl>
+          <details>
+            <summary>查看职位要求</summary>
+            <p class="requirements"></p>
+          </details>
+        </div>
+        <aside>
+          <span class="code"></span>
+          <a class="source" target="_blank" rel="noreferrer">查看官方公告</a>
+        </aside>
+      </article>
+    </template>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

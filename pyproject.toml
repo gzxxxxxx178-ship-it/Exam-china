@@ -1,6 +1,6 @@
 [project]
 name = "exam-finding"
-version = "0.2.0"
+version = "0.3.0"
 description = "个人使用的公职、事业单位与国企招聘信息聚合系统"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -13,6 +13,7 @@ dependencies = [
     "selectolax>=0.3,<1",
     "sqlalchemy>=2.0,<3",
     "uvicorn[standard]>=0.35,<1",
+    "xlrd>=2.0,<3",
 ]
 
 [dependency-groups]

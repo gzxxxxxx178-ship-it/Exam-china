@@ -1,12 +1,14 @@
 import argparse
 import asyncio
 import json
+from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
 
 from app.config import get_settings
 from app.db.session import SessionLocal
+from app.importers.national_exam_positions import import_national_exam_positions
 from app.seeds import load_divisions, load_sources
 from app.services.ingestion import run_source
 
@@ -28,6 +30,14 @@ def main() -> None:
     run_parser.add_argument("source_key")
     run_parser.add_argument("--max-items", type=int, default=20)
     run_parser.add_argument("--dry-run", action="store_true")
+    import_parser = subparsers.add_parser(
+        "import-national-exam", help="导入国家公务员局官方招考简章 XLS"
+    )
+    import_parser.add_argument("file", type=Path)
+    import_parser.add_argument(
+        "--batch-source-id", default="national-civil-service-2026"
+    )
+    import_parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.command == "init-db":
         initialize_database()
@@ -41,6 +51,16 @@ def main() -> None:
                     max_items=args.max_items,
                     dry_run=args.dry_run,
                 )
+            )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    elif args.command == "import-national-exam":
+        with SessionLocal() as session:
+            result = import_national_exam_positions(
+                session,
+                get_settings(),
+                args.file,
+                batch_source_id=args.batch_source_id,
+                dry_run=args.dry_run,
             )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 

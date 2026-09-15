@@ -53,6 +53,8 @@ def seed_positions(session: Session) -> None:
         PositionLocation(
             province_code="370000",
             city_code="370900",
+            province_name="山东省",
+            city_name="泰安市",
             location_type=LocationType.WORK_LOCATION,
             precision=LocationPrecision.CITY,
             raw_text="山东省泰安市",
@@ -63,6 +65,7 @@ def seed_positions(session: Session) -> None:
     province.locations.append(
         PositionLocation(
             province_code="370000",
+            province_name="山东省",
             location_type=LocationType.WORK_LOCATION,
             precision=LocationPrecision.PROVINCE,
             raw_text="山东省内",
@@ -85,6 +88,12 @@ def seed_positions(session: Session) -> None:
 
 def test_health(client: TestClient) -> None:
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_home_page(client: TestClient) -> None:
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "岗位雷达" in response.text
 
 
 def test_city_filter_is_strict_by_default(
@@ -148,3 +157,22 @@ def test_division_children(
     response = client.get("/api/divisions", params={"parent_code": "370000"})
     assert response.status_code == 200
     assert response.json()[0]["code"] == "370900"
+
+
+def test_location_options_come_from_imported_positions(
+    client: TestClient, session_factory: sessionmaker[Session]
+) -> None:
+    with session_factory() as session:
+        seed_positions(session)
+    response = client.get("/api/location-options")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "name": "山东省",
+            "code": "370000",
+            "position_count": 2,
+            "cities": [
+                {"name": "泰安市", "code": "370900", "position_count": 1}
+            ],
+        }
+    ]
