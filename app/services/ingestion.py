@@ -24,6 +24,7 @@ from app.domain.enums import CrawlStatus, RecruitmentStatus, SourceHealth
 
 
 STATUS_RANK = {
+    RecruitmentStatus.UNKNOWN: -1,
     RecruitmentStatus.UPCOMING: 0,
     RecruitmentStatus.OPEN: 1,
     RecruitmentStatus.CLOSED: 2,

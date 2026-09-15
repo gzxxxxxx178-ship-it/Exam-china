@@ -176,3 +176,32 @@ def test_location_options_come_from_imported_positions(
             ],
         }
     ]
+
+
+def test_location_options_merge_same_named_city_with_different_codes(
+    client: TestClient, session_factory: sessionmaker[Session]
+) -> None:
+    with session_factory() as session:
+        seed_positions(session)
+        batch = session.query(RecruitmentBatch).one()
+        duplicate_city = Position(title="同名地市岗位")
+        duplicate_city.locations.append(
+            PositionLocation(
+                province_code="370000",
+                city_code="370999",
+                province_name="山东省",
+                city_name="泰安市",
+                location_type=LocationType.WORK_LOCATION,
+                precision=LocationPrecision.CITY,
+                raw_text="山东省泰安市",
+                confidence=0.9,
+            )
+        )
+        batch.positions.append(duplicate_city)
+        session.commit()
+
+    response = client.get("/api/location-options")
+    assert response.status_code == 200
+    assert response.json()[0]["cities"] == [
+        {"name": "泰安市", "code": "370900", "position_count": 2}
+    ]

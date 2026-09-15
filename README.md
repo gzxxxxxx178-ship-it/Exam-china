@@ -62,6 +62,15 @@ uv run python -m app.cli import-national-exam "/绝对路径/招考简章.xls"
 
 截至 2026-09-15，国家电网有限公司人力资源招聘平台的公开首页对低频 HTTP 请求返回 `412` 访问校验页。项目已将该来源保持为暂停状态，并在页面“来源状态”中明确显示；不会绕过登录、验证码或反自动化措施。后续如提供允许自动访问的官方公告入口，或导入人工下载的官方公告/岗位表，可继续接入。
 
+对于人工下载的国家电网体系单位招聘需求 PDF，可使用：
+
+```bash
+uv run python -m app.cli import-state-grid-pdf "/绝对路径/招聘需求.pdf" --dry-run
+uv run python -m app.cli import-state-grid-pdf "/绝对路径/招聘需求.pdf"
+```
+
+导入器会保留单位、工作城市、专业类别和学历要求；PDF 未提供的岗位名称、招聘人数、报名时间和截止时间不会补写。
+
 ## 测试
 
 ```bash

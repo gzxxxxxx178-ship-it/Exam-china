@@ -9,6 +9,7 @@ from alembic.config import Config
 from app.config import get_settings
 from app.db.session import SessionLocal
 from app.importers.national_exam_positions import import_national_exam_positions
+from app.importers.state_grid_pdf import import_state_grid_pdf
 from app.seeds import load_divisions, load_sources
 from app.services.ingestion import run_source
 
@@ -38,6 +39,11 @@ def main() -> None:
         "--batch-source-id", default="national-civil-service-2026"
     )
     import_parser.add_argument("--dry-run", action="store_true")
+    state_grid_import_parser = subparsers.add_parser(
+        "import-state-grid-pdf", help="导入国家电网体系单位的官方招聘需求 PDF"
+    )
+    state_grid_import_parser.add_argument("file", type=Path)
+    state_grid_import_parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.command == "init-db":
         initialize_database()
@@ -61,6 +67,12 @@ def main() -> None:
                 args.file,
                 batch_source_id=args.batch_source_id,
                 dry_run=args.dry_run,
+            )
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    elif args.command == "import-state-grid-pdf":
+        with SessionLocal() as session:
+            result = import_state_grid_pdf(
+                session, get_settings(), args.file, dry_run=args.dry_run
             )
         print(json.dumps(result, ensure_ascii=False, indent=2))
 

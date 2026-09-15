@@ -11,6 +11,7 @@ class RecruitmentType(StrEnum):
 
 
 class RecruitmentStatus(StrEnum):
+    UNKNOWN = "UNKNOWN"
     UPCOMING = "UPCOMING"
     OPEN = "OPEN"
     CLOSED = "CLOSED"
@@ -49,4 +50,3 @@ class CrawlStatus(StrEnum):
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
     SKIPPED = "SKIPPED"
-

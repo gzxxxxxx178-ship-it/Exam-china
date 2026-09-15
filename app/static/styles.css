@@ -33,7 +33,7 @@ main { width: min(1180px, calc(100% - 40px)); margin: 26px auto 48px; }
 
 .filter-panel {
   display: grid;
-  grid-template-columns: minmax(240px, 2fr) repeat(3, minmax(130px, 1fr)) auto;
+  grid-template-columns: minmax(200px, 2fr) repeat(4, minmax(120px, 1fr)) auto;
   gap: 14px;
   align-items: end;
   margin-top: 18px;

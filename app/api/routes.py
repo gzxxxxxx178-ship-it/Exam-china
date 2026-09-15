@@ -94,9 +94,18 @@ def location_options(
         )
         item["position_count"] += count
         if city_name:
-            item["cities"].append(
-                CityOptionOut(name=city_name, code=city_code, position_count=count)
-            )
+            # 职位来源有时为同一地市提供不同的行政代码。前端按名称筛选，
+            # 因此这里合并同名地市，避免下拉框出现重复项。
+            cities = item["cities"]
+            existing = next((city for city in cities if city.name == city_name), None)
+            if existing:
+                existing.position_count += count
+                if existing.code is None and city_code:
+                    existing.code = city_code
+            else:
+                cities.append(
+                    CityOptionOut(name=city_name, code=city_code, position_count=count)
+                )
     return [ProvinceOptionOut(**item) for item in grouped.values()]
 
 

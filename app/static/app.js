@@ -62,9 +62,11 @@ async function loadPositions() {
   const keyword = $("#keyword").value.trim();
   const province = $("#province").value;
   const city = $("#city").value;
+  const category = $("#category").value;
   if (keyword) params.set("keyword", keyword);
   if (province) params.set("province_name", province);
   if (city) params.set("city_name", city);
+  if (category) params.append("categories", category);
   if ($("#broader-scope").checked) params.set("include_broader_scope", "true");
 
   try {
