@@ -1,0 +1,49 @@
+sources:
+  - key: national_civil_service
+    name: 国家公务员局年度考录专题
+    category: CIVIL_SERVICE_NATIONAL
+    base_url: http://bm.scs.gov.cn/
+    authority_level: NATIONAL
+    province_code: null
+    city_code: null
+    adapter_key: national_exam
+    crawl_policy:
+      robots_checked_at: null
+      terms_checked_at: null
+      max_concurrency: 1
+      min_interval_seconds: 5
+    interval_minutes: 240
+    enabled: false
+
+  - key: mohrss_institution
+    name: 中央和国家机关事业单位公开招聘服务平台
+    category: PUBLIC_INSTITUTION
+    base_url: https://www.mohrss.gov.cn/
+    authority_level: NATIONAL
+    province_code: null
+    city_code: null
+    adapter_key: mohrss_institution
+    crawl_policy:
+      robots_checked_at: null
+      terms_checked_at: null
+      max_concurrency: 1
+      min_interval_seconds: 5
+    interval_minutes: 240
+    enabled: false
+
+  - key: state_grid
+    name: 国家电网有限公司人力资源招聘平台
+    category: SOE_STATE_GRID
+    base_url: https://zhaopin.sgcc.com.cn/
+    authority_level: NATIONAL
+    province_code: null
+    city_code: null
+    adapter_key: state_grid
+    crawl_policy:
+      robots_checked_at: null
+      terms_checked_at: null
+      max_concurrency: 1
+      min_interval_seconds: 8
+    interval_minutes: 240
+    enabled: false
+
