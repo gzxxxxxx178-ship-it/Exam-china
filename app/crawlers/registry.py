@@ -2,11 +2,13 @@ import httpx
 
 from app.crawlers.base import SourceAdapter
 from app.crawlers.national_exam import NationalCivilServiceAdapter
+from app.crawlers.state_grid import StateGridAdapter
 
 
 def create_adapter(adapter_key: str, client: httpx.AsyncClient) -> SourceAdapter:
     adapters = {
         "national_exam": NationalCivilServiceAdapter,
+        "state_grid": StateGridAdapter,
     }
     try:
         adapter_class = adapters[adapter_key]

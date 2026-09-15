@@ -10,6 +10,10 @@ from app.domain.enums import (
 )
 
 
+class SourceAccessBlockedError(RuntimeError):
+    """官方站点明确拒绝自动访问时抛出，调用方必须暂停而非绕过。"""
+
+
 class DiscoveredItem(BaseModel):
     source_item_id: str
     url: HttpUrl

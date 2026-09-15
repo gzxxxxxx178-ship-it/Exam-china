@@ -239,8 +239,23 @@ def batch_detail(
 @router.get("/api/sources/coverage", response_model=list[SourceCoverageOut])
 def source_coverage(
     session: Annotated[Session, Depends(get_db)],
-) -> list[SourceRegistry]:
-    return list(session.scalars(select(SourceRegistry).order_by(SourceRegistry.key)))
+) -> list[SourceCoverageOut]:
+    sources = list(session.scalars(select(SourceRegistry).order_by(SourceRegistry.key)))
+    return [
+        SourceCoverageOut(
+            key=source.key,
+            name=source.name,
+            category=source.category,
+            authority_level=source.authority_level,
+            province_code=source.province_code,
+            city_code=source.city_code,
+            enabled=source.enabled,
+            access_note=source.crawl_policy.get("access_note"),
+            last_success_at=source.last_success_at,
+            health_status=source.health_status,
+        )
+        for source in sources
+    ]
 
 
 @router.get("/api/crawl-runs", response_model=list[CrawlRunOut])

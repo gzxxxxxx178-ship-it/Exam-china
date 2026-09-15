@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.crawlers.base import ParsedRecruitment, RawPayload
+from app.crawlers.base import ParsedRecruitment, RawPayload, SourceAccessBlockedError
 from app.crawlers.registry import create_adapter
 from app.db.models import (
     CrawlRun,
@@ -289,11 +289,19 @@ async def run_source(
             persisted_run = session.get(CrawlRun, run.id)
             persisted_source = session.get(SourceRegistry, source.id)
             if persisted_run:
-                persisted_run.status = CrawlStatus.FAILED
+                persisted_run.status = (
+                    CrawlStatus.SKIPPED
+                    if isinstance(exc, SourceAccessBlockedError)
+                    else CrawlStatus.FAILED
+                )
                 persisted_run.finished_at = datetime.now(UTC)
                 persisted_run.error_type = type(exc).__name__
                 persisted_run.error_message = str(exc)[:2000]
             if persisted_source:
-                persisted_source.health_status = SourceHealth.DEGRADED
+                persisted_source.health_status = (
+                    SourceHealth.PAUSED
+                    if isinstance(exc, SourceAccessBlockedError)
+                    else SourceHealth.DEGRADED
+                )
             session.commit()
         raise

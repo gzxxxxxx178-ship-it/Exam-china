@@ -74,6 +74,16 @@
         <span id="page-label">第 1 页</span>
         <button id="next" type="button">下一页</button>
       </nav>
+
+      <section class="source-section" aria-label="来源状态">
+        <div class="source-heading">
+          <div>
+            <p>来源状态</p>
+            <small>只展示已配置的官方来源及最近采集状态</small>
+          </div>
+        </div>
+        <div id="source-list" class="source-list"></div>
+      </section>
     </main>
 
     <template id="position-template">
@@ -101,6 +111,16 @@
           <span class="code"></span>
           <a class="source" target="_blank" rel="noreferrer">查看官方公告</a>
         </aside>
+      </article>
+    </template>
+
+    <template id="source-template">
+      <article class="source-card">
+        <div>
+          <h2 class="source-name"></h2>
+          <p class="source-meta"></p>
+        </div>
+        <span class="source-status"></span>
       </article>
     </template>
 

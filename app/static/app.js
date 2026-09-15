@@ -97,6 +97,27 @@ async function loadOptions() {
   }
 }
 
+async function loadSources() {
+  const response = await fetch("/api/sources/coverage");
+  if (!response.ok) throw new Error("来源状态加载失败");
+  const sources = await response.json();
+  const list = $("#source-list");
+  list.replaceChildren();
+  const labels = { HEALTHY: "运行正常", UNKNOWN: "待验证", DEGRADED: "需要检查", PAUSED: "已暂停" };
+  for (const item of sources) {
+    const card = $("#source-template").content.cloneNode(true);
+    card.querySelector(".source-name").textContent = item.name;
+    const stateText = item.enabled ? "已启用" : "未启用";
+    card.querySelector(".source-meta").textContent = item.access_note
+      ? `${stateText} · ${item.access_note}`
+      : `${stateText} · ${item.authority_level}`;
+    const status = card.querySelector(".source-status");
+    status.textContent = labels[item.health_status] || item.health_status;
+    status.classList.add(item.health_status === "HEALTHY" ? "running" : "paused");
+    list.append(card);
+  }
+}
+
 $("#province").addEventListener("change", () => { setCities(); state.page = 1; });
 $("#search-button").addEventListener("click", () => { state.page = 1; loadPositions(); });
 $("#keyword").addEventListener("keydown", (event) => {
@@ -105,7 +126,7 @@ $("#keyword").addEventListener("keydown", (event) => {
 $("#previous").addEventListener("click", () => { state.page -= 1; loadPositions(); scrollTo(0, 0); });
 $("#next").addEventListener("click", () => { state.page += 1; loadPositions(); scrollTo(0, 0); });
 
-Promise.all([loadOptions(), loadPositions()]).catch((reason) => {
+Promise.all([loadOptions(), loadPositions(), loadSources()]).catch((reason) => {
   $("#error").textContent = reason.message;
   $("#error").hidden = false;
 });

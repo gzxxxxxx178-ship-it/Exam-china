@@ -44,8 +44,11 @@ def load_sources(session: Session, path: Path) -> int:
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     created = 0
     for item in payload.get("sources", []):
+        source_item = dict(item)
+        seed_health_status = source_item.pop("seed_health_status", None)
+        seed_health = SourceHealth(seed_health_status) if seed_health_status else None
         existing = session.scalar(
-            select(SourceRegistry).where(SourceRegistry.key == item["key"])
+            select(SourceRegistry).where(SourceRegistry.key == source_item["key"])
         )
         if existing:
             for field in (
@@ -60,12 +63,14 @@ def load_sources(session: Session, path: Path) -> int:
                 "interval_minutes",
                 "enabled",
             ):
-                setattr(existing, field, item[field])
+                setattr(existing, field, source_item[field])
+            if seed_health == SourceHealth.PAUSED:
+                existing.health_status = SourceHealth.PAUSED
             continue
         session.add(
             SourceRegistry(
-                **item,
-                health_status=SourceHealth.UNKNOWN,
+                **source_item,
+                health_status=seed_health or SourceHealth.UNKNOWN,
             )
         )
         created += 1

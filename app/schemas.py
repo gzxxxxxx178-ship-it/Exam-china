@@ -119,6 +119,7 @@ class SourceCoverageOut(BaseModel):
     province_code: str | None
     city_code: str | None
     enabled: bool
+    access_note: str | None
     last_success_at: datetime | None
     health_status: SourceHealth
 

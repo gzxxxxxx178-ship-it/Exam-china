@@ -44,9 +44,12 @@ sources:
     city_code: null
     adapter_key: state_grid
     crawl_policy:
-      robots_checked_at: null
+      robots_checked_at: "2026-09-15"
+      robots_status: ACCESS_CONTROLLED
+      access_note: 公开入口对低频 HTTP 请求返回 412 访问校验页；保持暂停，不绕过登录、验证码或反自动化措施。
       terms_checked_at: null
       max_concurrency: 1
-      min_interval_seconds: 8
-    interval_minutes: 240
+      min_interval_seconds: 0
+    interval_minutes: 1440
     enabled: false
+    seed_health_status: PAUSED
